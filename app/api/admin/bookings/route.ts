@@ -1,9 +1,8 @@
-import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { ADMIN_COOKIE, getAdminPassword, isValidSessionToken } from "@/lib/admin-auth";
 import { sendBookingAccepted, sendBookingRefused, type BookingEmailData } from "@/lib/email";
-import { getSupabasePublishableKey, getSupabaseSecretKey, getSupabaseUrl } from "@/lib/supabase/config";
+import { updateBookingStatus } from "@/lib/admin-data";
 
 const actions = {
   accept: { status: "confirmed", send: sendBookingAccepted },
@@ -26,24 +25,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
   }
 
-  const supabase = createClient(getSupabaseUrl(), getSupabaseSecretKey() ?? getSupabasePublishableKey(), {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-  const { data, error } = await supabase.rpc("admin_update_booking_status", {
-    p_password: password,
-    p_booking_number: bookingNumber,
-    p_status: actions[action].status,
-  });
+  const { booking: updated, error, code } = await updateBookingStatus(bookingNumber, actions[action].status);
 
-  if (error) {
+  if (error || !updated) {
     const message =
-      error.code === "23P01"
+      code === "23P01"
         ? "Un autre rendez-vous est déjà confirmé sur ce créneau."
-        : "Mise à jour impossible. Vérifiez la configuration Supabase.";
+        : code === "28000" || /unauthorized/i.test(error ?? "")
+          ? "Supabase a refusé la mise à jour : le mot de passe enregistré en base ne correspond pas à ADMIN_PASSWORD. Ajoutez SUPABASE_SECRET_KEY dans Vercel, ou exécutez select public.admin_set_password('<votre mot de passe>'); dans Supabase."
+          : `Mise à jour impossible. ${error ?? ""}`.trim();
     return NextResponse.json({ error: message }, { status: 409 });
   }
 
-  const booking = data as BookingEmailData;
+  const booking = updated as BookingEmailData;
   const mail = await actions[action].send(booking);
   return NextResponse.json({ status: booking.status, email: mail });
 }
