@@ -1,6 +1,8 @@
 import LoginForm from "./login-form";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminPage() {
   const client = await createClient();
   if (!client) return <div className="admin-page"><LoginForm /></div>;

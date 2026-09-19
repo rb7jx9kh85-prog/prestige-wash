@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Manrope } from "next/font/google";
 import "./globals.css";
+import { getSiteUrl } from "@/lib/site-url";
 
 const display = Cormorant_Garamond({
   subsets: ["latin"],
@@ -14,7 +15,7 @@ const sans = Manrope({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://prestigewash.ch"),
+  metadataBase: getSiteUrl(),
   title: "Prestige Wash | Nettoyage automobile & textile en Valais",
   description:
     "Nettoyage automobile et textile à domicile dans tout le Valais. Un résultat professionnel, directement chez vous.",

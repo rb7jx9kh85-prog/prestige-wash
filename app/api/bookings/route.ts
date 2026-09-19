@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { getSupabasePublishableKey, getSupabaseSecretKey, getSupabaseUrl } from "@/lib/supabase/config";
 
 const serviceSlugs: Record<string, string> = {
   "Nettoyage automobile": "nettoyage-automobile",
@@ -12,9 +13,11 @@ function text(value: unknown, max = 300) {
 }
 
 export async function POST(request: Request) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const secret = process.env.SUPABASE_SECRET_KEY;
-  if (!url || !secret) return NextResponse.json({ error: "Réservation en ligne non configurée." }, { status: 503 });
+  const url = getSupabaseUrl();
+  // La clé secrète est préférée ; à défaut, la clé publiable suffit car la fonction
+  // `create_booking_secure` est `security definer` et valide elle-même les données.
+  const key = getSupabaseSecretKey() ?? getSupabasePublishableKey();
+  if (!url || !key) return NextResponse.json({ error: "Réservation en ligne non configurée." }, { status: 503 });
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
   const payload = {
@@ -27,7 +30,7 @@ export async function POST(request: Request) {
   }
   const start = new Date(`${payload.date}T${payload.time}:00+02:00`);
   if (Number.isNaN(start.getTime()) || start.getTime() < Date.now()) return NextResponse.json({ error: "Créneau invalide." }, { status: 422 });
-  const supabase = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
+  const supabase = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data, error } = await supabase.rpc("create_booking_secure", {
     p_service_slug: serviceSlugs[payload.service], p_vehicle_label: payload.vehicle,
     p_start_at: start.toISOString(), p_full_name: payload.name, p_phone: payload.phone,
