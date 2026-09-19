@@ -51,6 +51,8 @@ Settings → Environment Variables :
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://pbnniqdthncaphedvgej.supabase.co` | Production, Preview, Development |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_YC-MXCNOMHjIqiG6iFWadg_sybtPyw5` | Production, Preview, Development |
 | `SUPABASE_SECRET_KEY` | clé `service_role` (Supabase → Settings → API) | Production, Preview |
+| `RESEND_API_KEY` | clé API Resend (`re_…`) | Production, Preview |
+| `RESEND_FROM` | `Car Detailion <contact@cardetailion.ch>` | Production, Preview |
 | `NEXT_PUBLIC_SITE_URL` | `https://prestige-wash-eight.vercel.app` | Production (facultatif) |
 
 Seule `ADMIN_PASSWORD` est indispensable : les valeurs Supabase publiques ont un
@@ -82,6 +84,28 @@ c’est la configuration recommandée, elle supprime toute désynchronisation.
 (la variable Vercel est bonne) mais l’empreinte en base diffère. Corrigez au
 choix en ajoutant `SUPABASE_SECRET_KEY`, ou en exécutant
 `select public.admin_set_password('<valeur de ADMIN_PASSWORD>');` dans Supabase.
+
+## Accepter ou refuser une demande
+
+Chaque demande du dashboard porte deux boutons :
+
+- **Accepter** → statut `confirmed` + e-mail de confirmation au client ;
+- **Refuser** → statut `cancelled` + e-mail invitant à choisir un autre créneau.
+
+Une décision reste modifiable. Confirmer deux rendez-vous qui se chevauchent est
+refusé par la base (contrainte `bookings_no_overlap`), avec un message explicite.
+
+### E-mails (Resend)
+
+1. Créer un compte sur [resend.com](https://resend.com) et une clé API.
+2. Vérifier le domaine d’envoi (Domains → Add Domain) — sans domaine vérifié,
+   Resend n’autorise que l’adresse de test `onboarding@resend.dev`.
+3. Renseigner `RESEND_API_KEY` et `RESEND_FROM` dans Vercel.
+
+Sans clé, les boutons fonctionnent quand même : le statut change et le dashboard
+indique que l’e-mail n’a pas été envoyé. Le formulaire public exige désormais une
+adresse e-mail ; les demandes créées avant ce changement n’en ont pas et le
+dashboard le signale (« Aucun e-mail : prévenir par téléphone »).
 
 ## Supabase
 

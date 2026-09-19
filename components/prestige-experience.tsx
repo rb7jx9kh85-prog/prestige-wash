@@ -392,15 +392,15 @@ function Trust() {
   );
 }
 
-type BookingData = { service: string; vehicle: string; date: string; time: string; name: string; phone: string; location: string; notes: string };
-const initialBooking: BookingData = { service: "", vehicle: "", date: "", time: "", name: "", phone: "", location: "", notes: "" };
+type BookingData = { service: string; vehicle: string; date: string; time: string; name: string; phone: string; email: string; location: string; notes: string };
+const initialBooking: BookingData = { service: "", vehicle: "", date: "", time: "", name: "", phone: "", email: "", location: "", notes: "" };
 
 function BookingModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [step, setStep] = useState(1);
   const [data, setData] = useState(initialBooking);
   const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
   const update = (key: keyof BookingData, value: string) => setData((current) => ({ ...current, [key]: value }));
-  const canContinue = step === 1 ? data.service && data.vehicle : step === 2 ? data.date && data.time : data.name && data.phone && data.location;
+  const canContinue = step === 1 ? data.service && data.vehicle : step === 2 ? data.date && data.time : data.name && data.phone && data.email && data.location;
   async function submit(event: FormEvent) {
     event.preventDefault(); setStatus("loading");
     try {
@@ -408,7 +408,7 @@ function BookingModal({ open, onClose }: { open: boolean; onClose: () => void })
       if (!response.ok) throw new Error("Supabase non configuré");
       setStatus("success");
     } catch {
-      const message = `Bonjour Car Detailion, je souhaite demander un rendez-vous.\n\nPrestation : ${data.service}\nType : ${data.vehicle}\nDate souhaitée : ${data.date} à ${data.time}\nNom : ${data.name}\nCommune : ${data.location}\nTéléphone : ${data.phone}\nPrécisions : ${data.notes || "Aucune"}`;
+      const message = `Bonjour Car Detailion, je souhaite demander un rendez-vous.\n\nPrestation : ${data.service}\nType : ${data.vehicle}\nDate souhaitée : ${data.date} à ${data.time}\nNom : ${data.name}\nCommune : ${data.location}\nTéléphone : ${data.phone}\nE-mail : ${data.email}\nPrécisions : ${data.notes || "Aucune"}`;
       window.open(`https://wa.me/${PHONE}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
       setStatus("success");
     }
@@ -419,14 +419,14 @@ function BookingModal({ open, onClose }: { open: boolean; onClose: () => void })
       {open && <motion.div className="modal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
         <motion.div className="modal__panel" initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 80, opacity: 0 }}>
           <button className="modal__close" onClick={close} aria-label="Fermer"><X /></button>
-          {status === "success" ? <div className="booking-success"><div><Check /></div><small>Demande préparée</small><h2>Merci, {data.name.split(" ")[0]}.</h2><p>Votre demande a été transmise. Car Detailion vous confirmera le rendez-vous personnellement.</p><button className="button button--gold" onClick={close}>Retour au site</button></div> : <form onSubmit={submit}>
+          {status === "success" ? <div className="booking-success"><div><Check /></div><small>Demande préparée</small><h2>Merci, {data.name.split(" ")[0]}.</h2><p>Votre demande a été transmise. Vous recevrez un e-mail dès que Car Detailion aura confirmé le rendez-vous.</p><button className="button button--gold" onClick={close}>Retour au site</button></div> : <form onSubmit={submit}>
             <div className="modal__head"><Brand compact /><span>Étape {step} sur 3</span></div>
             <div className="progress"><i style={{ width: `${step * 33.333}%` }} /></div>
             {step === 1 && <div className="booking-step"><small>Votre besoin</small><h2>Quelle prestation vous intéresse ?</h2><div className="choice-grid">
               {services.map((item) => <button type="button" className={data.service === item.title ? "selected" : ""} onClick={() => update("service", item.title)} key={item.title}>{item.title}<span className="choice-price">{item.price}</span><Check /></button>)}
             </div><label>Véhicule<input value={data.vehicle} onChange={(e) => update("vehicle", e.target.value)} placeholder="Ex. BMW Série 3, SUV…" /></label></div>}
             {step === 2 && <div className="booking-step"><small>Votre disponibilité</small><h2>Quel moment vous conviendrait ?</h2><div className="field-row"><label><CalendarDays /> Date souhaitée<input type="date" value={data.date} min={new Date().toISOString().split("T")[0]} onChange={(e) => update("date", e.target.value)} /></label><label><Clock3 /> Heure souhaitée<select value={data.time} onChange={(e) => update("time", e.target.value)}><option value="">Sélectionner</option>{["08:00", "10:00", "13:00", "15:00", "17:00"].map((time) => <option key={time}>{time}</option>)}</select></label></div><p className="booking-note"><ShieldCheck /> Le créneau reste à confirmer selon la prestation et sa durée.</p></div>}
-            {step === 3 && <div className="booking-step"><small>Vos coordonnées</small><h2>Comment vous joindre ?</h2><div className="field-row"><label>Nom complet<input value={data.name} onChange={(e) => update("name", e.target.value)} placeholder="Votre nom" /></label><label>Téléphone<input type="tel" value={data.phone} onChange={(e) => update("phone", e.target.value)} placeholder="07x xxx xx xx" /></label></div><label>Commune<input value={data.location} onChange={(e) => update("location", e.target.value)} placeholder="Ex. Renens" /></label><label>Précisions facultatives<textarea value={data.notes} onChange={(e) => update("notes", e.target.value)} placeholder="État du véhicule, rayures, taches…" /></label></div>}
+            {step === 3 && <div className="booking-step"><small>Vos coordonnées</small><h2>Comment vous joindre ?</h2><div className="field-row"><label>Nom complet<input value={data.name} onChange={(e) => update("name", e.target.value)} placeholder="Votre nom" /></label><label>Téléphone<input type="tel" value={data.phone} onChange={(e) => update("phone", e.target.value)} placeholder="07x xxx xx xx" /></label></div><label>E-mail<input type="email" value={data.email} onChange={(e) => update("email", e.target.value)} placeholder="vous@exemple.ch" /></label><label>Commune<input value={data.location} onChange={(e) => update("location", e.target.value)} placeholder="Ex. Renens" /></label><label>Précisions facultatives<textarea value={data.notes} onChange={(e) => update("notes", e.target.value)} placeholder="État du véhicule, rayures, taches…" /></label></div>}
             <div className="modal__footer">{step > 1 ? <button type="button" className="back" onClick={() => setStep(step - 1)}><ArrowLeft /> Retour</button> : <span />}{step < 3 ? <button type="button" className="button button--gold" disabled={!canContinue} onClick={() => setStep(step + 1)}>Continuer <ArrowRight /></button> : <button className="button button--gold" disabled={!canContinue || status === "loading"}>{status === "loading" ? "Envoi…" : "Envoyer ma demande"} <ArrowRight /></button>}</div>
           </form>}
         </motion.div>

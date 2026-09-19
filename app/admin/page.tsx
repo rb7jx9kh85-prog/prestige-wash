@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import LoginForm from "./login-form";
+import BookingActions from "./booking-actions";
 import LogoutButton from "./logout-button";
 import { ADMIN_COOKIE, getAdminPassword, isValidSessionToken } from "@/lib/admin-auth";
 import { fetchBookings } from "@/lib/admin-data";
@@ -70,11 +71,19 @@ export default async function AdminPage() {
                     <strong>{booking.service}</strong>
                     <span>
                       {booking.customer_name} · {booking.phone}
+                      {booking.email ? ` · ${booking.email}` : ""}
                       {booking.vehicle ? ` · ${booking.vehicle}` : ""}
                       {booking.location ? ` · ${booking.location}` : ""}
                     </span>
                   </div>
-                  <i>{statusLabels[booking.status] ?? booking.status}</i>
+                  <i className={`status status--${booking.status}`}>
+                    {statusLabels[booking.status] ?? booking.status}
+                  </i>
+                  <BookingActions
+                    bookingNumber={booking.booking_number}
+                    hasEmail={Boolean(booking.email)}
+                    status={booking.status}
+                  />
                 </article>
               ))
             ) : (

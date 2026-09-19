@@ -207,5 +207,27 @@ footer { background: #070809; }
 .admin-login { width: min(450px, 100%); border: 1px solid rgba(255,255,255,.12); background: #111315; padding: 46px; display: flex; flex-direction: column; }
 .admin-login > span, .admin-dashboard header span, .admin-dashboard section > small { color: var(--gold); letter-spacing: .16em; font-size: 9px; }
 .admin-login h1 { font-size: 4rem; margin: 15px 0; }.admin-login p { color: #8b8c88; line-height: 1.6; margin-bottom: 35px; }.admin-login label { display: flex; flex-direction: column; gap: 8px; text-transform: uppercase; letter-spacing: .1em; font-size: 9px; margin-bottom: 18px; color: #9b9b97; }.admin-login input { color: white; background: transparent; border: 0; border-bottom: 1px solid #454643; padding: 12px 0; outline: 0; }.admin-login input:focus { border-color: var(--gold); }.admin-login strong { color: #d9967a; font-size: 11px; margin-bottom: 15px; }.admin-login button { min-height: 52px; background: var(--gold); border: 0; color: #111; cursor: pointer; margin-top: 10px; }.admin-login a { margin-top: 24px; color: #777; font-size: 10px; }
-.admin-dashboard { width: min(1100px, 100%); align-self: flex-start; padding-top: 60px; }.admin-dashboard header { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 34px; border-bottom: 1px solid var(--line); }.admin-dashboard header h1 { font-size: clamp(3rem, 7vw, 6rem); margin: 12px 0 0; }.admin-dashboard header a { color: var(--gold-light); font-size: 11px; }.admin-dashboard section { padding-top: 55px; }.admin-dashboard section h2 { font-size: 3rem; margin: 12px 0 30px; }.admin-list { display: flex; flex-direction: column; }.admin-list article { border-top: 1px solid var(--line); padding: 20px 0; display: grid; grid-template-columns: 1fr 1fr auto; gap: 25px; align-items: center; }.admin-list article div { display: flex; flex-direction: column; gap: 6px; }.admin-list article span { color: #848582; font-size: 11px; }.admin-list article i { font-style: normal; background: #2b2921; color: var(--gold-light); padding: 8px 10px; text-transform: uppercase; font-size: 8px; letter-spacing: .1em; }
+.admin-dashboard { width: min(1100px, 100%); align-self: flex-start; padding-top: 60px; }.admin-dashboard header { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 34px; border-bottom: 1px solid var(--line); }.admin-dashboard header h1 { font-size: clamp(3rem, 7vw, 6rem); margin: 12px 0 0; }.admin-dashboard header a { color: var(--gold-light); font-size: 11px; }.admin-dashboard section { padding-top: 55px; }.admin-dashboard section h2 { font-size: 3rem; margin: 12px 0 30px; }.admin-list { display: flex; flex-direction: column; }.admin-list article { border-top: 1px solid var(--line); padding: 22px 0; display: grid; grid-template-columns: 1fr 1.2fr auto auto; gap: 22px; align-items: center; }.admin-list article div { display: flex; flex-direction: column; gap: 6px; }.admin-list article span { color: #848582; font-size: 11px; }.admin-list article i { font-style: normal; background: #2b2921; color: var(--gold-light); padding: 8px 10px; text-transform: uppercase; font-size: 8px; letter-spacing: .1em; }
 @media (max-width:620px) { .admin-page { padding: 0; }.admin-login { min-height: 100vh; justify-content: center; border: 0; padding: 28px; }.admin-dashboard { padding: 32px 18px; }.admin-dashboard header { align-items: flex-start; }.admin-list article { grid-template-columns: 1fr auto; }.admin-list article div:nth-child(2) { grid-row: 2; } }
+
+/* Acceptation / refus d'une demande */
+.status--confirmed { background: #1f2d22 !important; color: #8fca9c !important; }
+.status--cancelled { background: #2d2020 !important; color: #d9967a !important; }
+.booking-actions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.booking-actions > div { display: flex; gap: 8px; }
+.booking-actions button { min-height: 36px; padding: 0 16px; border: 1px solid var(--gold); background: transparent; color: var(--gold-light); font-size: 10px; text-transform: uppercase; letter-spacing: .1em; cursor: pointer; transition: background .2s, color .2s; }
+.booking-actions button:hover:not(:disabled) { background: var(--gold); color: #111; }
+.booking-actions button.refuse { border-color: #6a4a42; color: #d9967a; }
+.booking-actions button.refuse:hover:not(:disabled) { background: #d9967a; color: #201414; }
+.booking-actions button:disabled { opacity: .35; cursor: not-allowed; }
+.booking-actions small { font-size: 10px; line-height: 1.5; color: #7d7e7b; max-width: 30ch; text-align: right; }
+.booking-actions__warn { color: #b9975b !important; }
+.feedback--ok { color: #8fca9c !important; }
+.feedback--warn { color: #c9a45c !important; }
+.feedback--error { color: #d9967a !important; }
+@media (max-width: 860px) {
+  .admin-list article { grid-template-columns: 1fr auto; }
+  .admin-list article div:nth-child(2) { grid-row: 2; grid-column: 1 / -1; }
+  .booking-actions { grid-column: 1 / -1; align-items: flex-start; }
+  .booking-actions small { text-align: left; }
+}

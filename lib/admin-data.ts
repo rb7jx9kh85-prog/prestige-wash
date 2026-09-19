@@ -9,6 +9,7 @@ export type AdminBooking = {
   location: string;
   customer_name: string;
   phone: string;
+  email: string | null;
   service: string;
   vehicle: string | null;
   notes: string | null;
@@ -34,7 +35,7 @@ export async function fetchBookings(): Promise<BookingsResult> {
     const supabase = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
     const { data, error } = await supabase
       .from("bookings")
-      .select("booking_number,start_at,status,location,customer_notes,customers(first_name,last_name,phone),services(name),vehicles(label)")
+      .select("booking_number,start_at,status,location,customer_notes,customers(first_name,last_name,phone,email),services(name),vehicles(label)")
       .order("start_at", { ascending: true })
       .limit(100);
     if (!error && data) {
@@ -42,7 +43,7 @@ export async function fetchBookings(): Promise<BookingsResult> {
         Array.isArray(value) ? (value[0] ?? null) : value;
       return {
         bookings: data.map((row) => {
-          const customer = first(row.customers as unknown as { first_name: string; last_name: string | null; phone: string } | null);
+          const customer = first(row.customers as unknown as { first_name: string; last_name: string | null; phone: string; email: string | null } | null);
           return {
             booking_number: row.booking_number,
             start_at: row.start_at,
@@ -50,6 +51,7 @@ export async function fetchBookings(): Promise<BookingsResult> {
             location: row.location,
             customer_name: [customer?.first_name, customer?.last_name].filter(Boolean).join(" "),
             phone: customer?.phone ?? "",
+            email: customer?.email ?? null,
             service: first(row.services as unknown as { name: string } | null)?.name ?? "",
             vehicle: first(row.vehicles as unknown as { label: string } | null)?.label ?? null,
             notes: row.customer_notes,
