@@ -28,7 +28,7 @@ export default async function AdminPage() {
     );
   }
 
-  const { bookings, error } = await fetchBookings();
+  const { bookings, error, fix } = await fetchBookings();
 
   return (
     <div className="admin-page">
@@ -46,7 +46,12 @@ export default async function AdminPage() {
         <section>
           <small>APERÇU</small>
           <h2>{bookings.length} demande{bookings.length > 1 ? "s" : ""}</h2>
-          {error && <p className="admin-error">{error}</p>}
+          {error && (
+            <div className="admin-error">
+              <p>{error}</p>
+              {fix && <pre>{fix}</pre>}
+            </div>
+          )}
           <div className="admin-list">
             {bookings.length ? (
               bookings.map((booking) => (

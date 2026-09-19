@@ -75,7 +75,13 @@ d’administration est un cookie `httpOnly` signé avec le mot de passe : le
 changer déconnecte immédiatement les sessions ouvertes.
 
 Si `SUPABASE_SECRET_KEY` est renseignée, la lecture des demandes passe
-directement par la clé de service et l’empreinte Supabase n’est plus sollicitée.
+directement par la clé de service et l’empreinte Supabase n’est plus sollicitée :
+c’est la configuration recommandée, elle supprime toute désynchronisation.
+
+**Message « Lecture des demandes bloquée par Supabase »** : la connexion a réussi
+(la variable Vercel est bonne) mais l’empreinte en base diffère. Corrigez au
+choix en ajoutant `SUPABASE_SECRET_KEY`, ou en exécutant
+`select public.admin_set_password('<valeur de ADMIN_PASSWORD>');` dans Supabase.
 
 ## Supabase
 

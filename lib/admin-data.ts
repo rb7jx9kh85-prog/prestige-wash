@@ -19,7 +19,14 @@ export type AdminBooking = {
  * Avec `SUPABASE_SECRET_KEY`, la lecture est directe. Sinon, elle passe par la
  * fonction `admin_bookings`, protégée par le mot de passe d'administration.
  */
-export async function fetchBookings(): Promise<{ bookings: AdminBooking[]; error?: string }> {
+export type BookingsResult = {
+  bookings: AdminBooking[];
+  error?: string;
+  /** Requête SQL à exécuter dans Supabase pour rétablir l'accès. */
+  fix?: string;
+};
+
+export async function fetchBookings(): Promise<BookingsResult> {
   const url = getSupabaseUrl();
   const secret = getSupabaseSecretKey();
 
@@ -63,7 +70,10 @@ export async function fetchBookings(): Promise<{ bookings: AdminBooking[]; error
     return {
       bookings: [],
       error:
-        "Lecture des demandes impossible. Vérifiez que le mot de passe enregistré dans Supabase correspond à ADMIN_PASSWORD.",
+        "Lecture des demandes bloquée par Supabase : le mot de passe enregistré dans la base ne correspond pas à ADMIN_PASSWORD. " +
+        "Deux solutions — ajoutez SUPABASE_SECRET_KEY dans Vercel (recommandé, plus aucun mot de passe côté base), " +
+        "ou exécutez cette ligne dans le SQL Editor de Supabase en remplaçant la valeur par celle de ADMIN_PASSWORD :",
+      fix: "select public.admin_set_password('VOTRE_MOT_DE_PASSE');",
     };
   }
   return { bookings: (data ?? []) as AdminBooking[] };
