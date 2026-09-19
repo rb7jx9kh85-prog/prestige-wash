@@ -3,9 +3,13 @@ import { NextResponse } from "next/server";
 import { getSupabasePublishableKey, getSupabaseSecretKey, getSupabaseUrl } from "@/lib/supabase/config";
 
 const serviceSlugs: Record<string, string> = {
-  "Nettoyage automobile": "nettoyage-automobile",
-  "Nettoyage textile": "nettoyage-textile",
-  "Location de machine": "location-machine",
+  "Lavage express": "lavage-express",
+  "Lavage Detailing": "lavage-detailing",
+  "Lavage textile": "lavage-textile",
+  "Soin du cuir": "soin-du-cuir",
+  "Polissage & correction de la peinture": "polissage-correction-peinture",
+  "Traitement céramique": "traitement-ceramique",
+  "Traitement céramique plus": "traitement-ceramique-plus",
 };
 
 function text(value: unknown, max = 300) {
