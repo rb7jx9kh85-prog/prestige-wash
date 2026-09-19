@@ -69,13 +69,22 @@ export async function fetchBookings(): Promise<BookingsResult> {
   });
   const { data, error } = await supabase.rpc("admin_bookings", { p_password: password });
   if (error) {
+    // Ne pas presumer de la cause : afficher l'erreur reelle renvoyee par Supabase.
+    const unauthorized = error.code === "28000" || /unauthorized/i.test(error.message ?? "");
+    if (unauthorized) {
+      return {
+        bookings: [],
+        error:
+          "Supabase a refusé la lecture : le mot de passe enregistré en base ne correspond pas à ADMIN_PASSWORD. " +
+          "Déconnectez-vous puis reconnectez-vous (la base apprend le mot de passe à la connexion), " +
+          "ou exécutez cette ligne dans le SQL Editor de Supabase :",
+        fix: "select public.admin_set_password('VOTRE_MOT_DE_PASSE');",
+      };
+    }
     return {
       bookings: [],
-      error:
-        "Lecture des demandes bloquée par Supabase : le mot de passe enregistré dans la base ne correspond pas à ADMIN_PASSWORD. " +
-        "Deux solutions — ajoutez SUPABASE_SECRET_KEY dans Vercel (recommandé, plus aucun mot de passe côté base), " +
-        "ou exécutez cette ligne dans le SQL Editor de Supabase en remplaçant la valeur par celle de ADMIN_PASSWORD :",
-      fix: "select public.admin_set_password('VOTRE_MOT_DE_PASSE');",
+      error: `Lecture des demandes impossible. Supabase a répondu : ${error.message ?? "erreur inconnue"}`,
+      fix: error.code ? `Code d’erreur : ${error.code}` : undefined,
     };
   }
   return { bookings: (data ?? []) as AdminBooking[] };
