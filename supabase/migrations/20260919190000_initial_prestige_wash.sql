@@ -103,7 +103,7 @@ begin
   v_first := split_part(trim(p_full_name), ' ', 1); v_last := nullif(trim(substr(trim(p_full_name), length(v_first) + 1)), '');
   insert into public.customers(first_name,last_name,phone) values(v_first,v_last,trim(p_phone)) returning id into v_customer;
   insert into public.vehicles(customer_id,category_id,label) values(v_customer,v_category,left(trim(p_vehicle_label),100)) returning id into v_vehicle;
-  v_number := 'PW-' || to_char(now(),'YYMMDD') || '-' || upper(substr(replace(gen_random_uuid()::text,'-',''),1,5));
+  v_number := 'CD-' || to_char(now(),'YYMMDD') || '-' || upper(substr(replace(gen_random_uuid()::text,'-',''),1,5));
   insert into public.bookings(booking_number,customer_id,vehicle_id,service_id,start_at,end_at,status,location,customer_notes)
   values(v_number,v_customer,v_vehicle,v_service.id,p_start_at,p_start_at + make_interval(mins => v_service.duration_minutes + v_service.buffer_minutes),'pending',left(trim(p_location),100),left(p_notes,700)) returning id into v_booking;
   insert into public.booking_events(booking_id,event_type,payload) values(v_booking,'booking_created',jsonb_build_object('source','website'));
