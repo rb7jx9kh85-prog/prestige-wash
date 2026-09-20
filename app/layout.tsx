@@ -20,8 +20,23 @@ const body = Open_Sans({
   display: "swap",
 });
 
+/**
+ * `??` ne se replie pas sur une chaîne vide : or Vercel peut très bien
+ * définir NEXT_PUBLIC_SITE_URL="" plutôt que de l'omettre, ce qui faisait
+ * échouer le build sur `new URL('')`. On se protège aussi d'une valeur
+ * malformée pour ne jamais bloquer le build sur ce champ, purement cosmétique.
+ */
+function resolveSiteUrl() {
+  const raw = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  try {
+    return new URL(raw || "http://localhost:3000");
+  } catch {
+    return new URL("http://localhost:3000");
+  }
+}
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: resolveSiteUrl(),
   title: {
     default: `${BRAND.name} — ${BRAND.subtitle}`,
     template: `%s · ${BRAND.name}`,
