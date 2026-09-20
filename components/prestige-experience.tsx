@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, PointerEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, PointerEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   AnimatePresence,
   motion,
@@ -29,6 +29,7 @@ import {
   Star,
   X,
 } from "lucide-react";
+import { CHAT_GREETING } from "@/lib/chat-context";
 
 const PHONE = "41788049623";
 const INSTAGRAM = "https://www.instagram.com/la_romande_auto/";
@@ -435,19 +436,111 @@ function BookingModal({ open, onClose }: { open: boolean; onClose: () => void })
   );
 }
 
+type ChatMessage = { role: "user" | "assistant"; content: string };
+
+const FALLBACK_REPLY =
+  "Je ne parviens pas à répondre pour le moment. Appelez-nous au 078 804 96 23 ou écrivez-nous sur WhatsApp, nous vous répondrons personnellement.";
+
 function ChatAssistant({ onBook }: { onBook: () => void }) {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<string[]>(["Bonjour 👋 Je peux vous aider à choisir une prestation ou à préparer votre demande."]);
-  const questions = useMemo(() => ["Où êtes-vous situés ?", "Quelles sont vos prestations ?", "Combien coûte un polissage ?"], []);
-  const answer = (question: string) => {
-    const response = question.includes("situés")
-      ? `Car Detailion se trouve ${ADDRESS}, dans le canton de Vaud. Téléphone : 078 804 96 23.`
-      : question.includes("prestations")
-        ? "Lavage express (120.-), lavage Detailing (200.-), lavage textile (150.-), soin du cuir (200.-), polissage & correction de la peinture (600.-), traitement céramique (200.-) et céramique plus (250.-)."
-        : "Le polissage et la correction de la peinture sont à 600.-. Le tarif final dépend de l’état de la carrosserie : envoyez-nous votre demande pour une estimation précise.";
-    setMessages((items) => [...items, question, response]);
-  };
-  return <><button className="chat-button" onClick={() => setOpen(!open)} aria-label="Assistant Car Detailion"><MessageCircle /><span>Une question ?</span></button><AnimatePresence>{open && <motion.aside className="chat" initial={{ opacity: 0, y: 20, scale: .96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: .96 }}><div className="chat__head"><div className="chat__avatar">CD</div><div><strong>Assistant Car Detailion</strong><span><i /> Disponible</span></div><button onClick={() => setOpen(false)}><X size={18} /></button></div><div className="chat__messages">{messages.map((message, index) => <p className={index > 0 && index % 2 === 1 ? "mine" : ""} key={`${message}-${index}`}>{message}</p>)}</div><div className="chat__questions">{questions.map((question) => <button key={question} onClick={() => answer(question)}>{question}</button>)}<button className="chat__book" onClick={() => { setOpen(false); onBook(); }}>Préparer ma demande <ArrowRight size={15} /></button></div></motion.aside>}</AnimatePresence></>;
+  const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", content: CHAT_GREETING }]);
+  const [draft, setDraft] = useState("");
+  const [loading, setLoading] = useState(false);
+  const scroller = useRef<HTMLDivElement>(null);
+  const suggestions = useMemo(
+    () => ["Quelles sont vos prestations ?", "Combien coûte un polissage ?", "Où êtes-vous situés ?"],
+    [],
+  );
+
+  useEffect(() => {
+    scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
+  }, [messages, loading]);
+
+  async function send(text: string) {
+    const content = text.trim();
+    if (!content || loading) return;
+    const history = [...messages, { role: "user" as const, content }];
+    setMessages(history);
+    setDraft("");
+    setLoading(true);
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: history.filter((item) => item.content !== CHAT_GREETING) }),
+      });
+      const data = await response.json().catch(() => null);
+      const reply = response.ok && data?.reply ? data.reply : data?.error || FALLBACK_REPLY;
+      setMessages((items) => [...items, { role: "assistant", content: reply }]);
+    } catch {
+      setMessages((items) => [...items, { role: "assistant", content: FALLBACK_REPLY }]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <>
+      <button className="chat-button" onClick={() => setOpen(!open)} aria-label="Assistant Car Detailion">
+        <MessageCircle />
+        <span>Une question ?</span>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.aside
+            className="chat"
+            initial={{ opacity: 0, y: 20, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.96 }}
+          >
+            <div className="chat__head">
+              <div className="chat__avatar">CD</div>
+              <div>
+                <strong>Assistant Car Detailion</strong>
+                <span><i /> En ligne</span>
+              </div>
+              <button onClick={() => setOpen(false)} aria-label="Fermer"><X size={18} /></button>
+            </div>
+            <div className="chat__messages" ref={scroller}>
+              {messages.map((message, index) => (
+                <p className={message.role === "user" ? "mine" : ""} key={`${index}-${message.content.slice(0, 12)}`}>
+                  {message.content}
+                </p>
+              ))}
+              {loading && <p className="chat__typing"><i /><i /><i /></p>}
+            </div>
+            {messages.length === 1 && (
+              <div className="chat__suggestions">
+                {suggestions.map((question) => (
+                  <button key={question} onClick={() => send(question)}>{question}</button>
+                ))}
+              </div>
+            )}
+            <form
+              className="chat__composer"
+              onSubmit={(event) => { event.preventDefault(); send(draft); }}
+            >
+              <input
+                value={draft}
+                onChange={(event) => setDraft(event.target.value)}
+                placeholder="Votre question…"
+                maxLength={600}
+                aria-label="Votre question"
+              />
+              <button type="submit" disabled={loading || !draft.trim()} aria-label="Envoyer">
+                <ArrowRight size={16} />
+              </button>
+            </form>
+            <div className="chat__questions">
+              <button className="chat__book" onClick={() => { setOpen(false); onBook(); }}>
+                Demander un rendez-vous <ArrowRight size={15} />
+              </button>
+            </div>
+          </motion.aside>
+        )}
+      </AnimatePresence>
+    </>
+  );
 }
 
 function Footer({ onBook }: { onBook: () => void }) {

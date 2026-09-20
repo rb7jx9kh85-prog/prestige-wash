@@ -51,6 +51,8 @@ Settings → Environment Variables :
 | `NEXT_PUBLIC_SUPABASE_URL` | `https://pbnniqdthncaphedvgej.supabase.co` | Production, Preview, Development |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_YC-MXCNOMHjIqiG6iFWadg_sybtPyw5` | Production, Preview, Development |
 | `SUPABASE_SECRET_KEY` | clé `service_role` (Supabase → Settings → API) | Production, Preview |
+| `OPENAI_API_KEY` | clé API OpenAI (`sk-…`) pour le chatbot | Production, Preview |
+| `OPENAI_MODEL` | modèle, par défaut `gpt-4o-mini` | Facultatif |
 | `RESEND_API_KEY` | clé API Resend (`re_…`) | Production, Preview |
 | `RESEND_FROM` | `Car Detailion <contact@cardetailion.ch>` | Production, Preview |
 | `NEXT_PUBLIC_SITE_URL` | `https://prestige-wash-eight.vercel.app` | Production (facultatif) |
@@ -84,6 +86,22 @@ c’est la configuration recommandée, elle supprime toute désynchronisation.
 (la variable Vercel est bonne) mais l’empreinte en base diffère. Corrigez au
 choix en ajoutant `SUPABASE_SECRET_KEY`, ou en exécutant
 `select public.admin_set_password('<valeur de ADMIN_PASSWORD>');` dans Supabase.
+
+## Chatbot
+
+Un assistant en bas à droite du site répond aux questions des visiteurs via
+l’API OpenAI. La clé ne quitte jamais le serveur : le navigateur parle à
+`/api/chat`, qui appelle OpenAI.
+
+- Contexte métier dans `lib/chat-context.ts` : prestations, tarifs, adresse,
+  téléphone. L’assistant a pour consigne de ne jamais inventer d’horaires, de
+  délais ou de disponibilités, et de renvoyer au 078 804 96 23 dans ces cas.
+- Historique limité aux 12 derniers messages, 600 caractères par message.
+- Limite de 12 requêtes par minute et par adresse IP, pour éviter les abus.
+- Sans `OPENAI_API_KEY`, le widget reste visible et invite à téléphoner.
+
+Modifier le ton ou les informations de l’assistant se fait dans
+`lib/chat-context.ts`, sans toucher au reste du code.
 
 ## Accepter ou refuser une demande
 
